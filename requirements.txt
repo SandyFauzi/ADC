@@ -1,4 +1,6 @@
 streamlit
-plotly
-pytz
 matplotlib
+numpy
+pandas
+scipy
+Pillow
