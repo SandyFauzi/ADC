@@ -140,7 +140,8 @@ def main():
         unsafe_allow_html=True
     )
 
-    st.title("🌡️💧🎛️🎤 Sensor Signal Data Simulator")
+    st.title("🌡️💧🎛️🎤")
+    st.title("Sensor Signal Data Simulator")
     st.subheader("Analyzing the Effects of Analog Circuitry on ADC Accuracy")
     st.markdown(
         """
