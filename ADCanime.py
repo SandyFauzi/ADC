@@ -133,11 +133,36 @@ def main():
             amplitude = st.slider(f"Signal Amplitude ({unit})", 0.1, v_ref / 2, 1.0, step=0.01)
 
         st.subheader("2. Analog Circuitry")
-        resistance = st.slider("Filter Resistance (kΩ)", 0.0, 1000.0, 10.0, step=0.01)
-        capacitance = st.slider("Filter Capacitance (μF)", 0.01, 100.0, 0.1, step=0.01)
+        res_unit = st.selectbox(
+            "Resistor Unit",
+            ["Ω", "kΩ", "MΩ"],
+            index=1
+        )
+        res_factor = {"Ω": 1, "kΩ": 1e3, "MΩ": 1e6}[res_unit]
+        res_min, res_max, res_default = (0.0, 1000.0, 10.0)
+        resistance_val = st.slider(
+            f"Filter Resistance ({res_unit})",
+            res_min, res_max, res_default, step=0.01
+        )
+        resistance = resistance_val * res_factor
+
+        cap_unit = st.selectbox(
+            "Capacitor Unit",
+            ["pF", "nF", "μF", "mF", "F"],
+            index=2
+        )
+        cap_factor = {"pF": 1e-12, "nF": 1e-9, "μF": 1e-6, "mF": 1e-3, "F": 1}[cap_unit]
+        cap_min, cap_max, cap_default = (0.01, 100.0, 0.1)
+        capacitance_val = st.slider(
+            f"Filter Capacitance ({cap_unit})",
+            cap_min, cap_max, cap_default, step=0.01
+        )
+        capacitance = capacitance_val * cap_factor
+
         gain = st.slider("Op-Amp Gain", 0.1, 10.0, 1.0, step=0.01)
         slew_rate = st.slider("Op-Amp Slew Rate (V/μs)", 0.1, 100.0, 10.0, step=0.01)
         noise_level = st.slider("Noise Level (mV)", 0.0, 10000.0, 10.0, step=0.01)
+
 
         st.subheader("3. ADC & Sampling")
         resolution = st.slider("ADC Resolution (bits)", 8, 16, 12)
