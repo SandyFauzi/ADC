@@ -320,7 +320,7 @@ def main():
 
         st.markdown("---")
         st.subheader("Voltage Signal Quality Analysis")
-        # ----- GANTI INTERPOLASI RMS ERROR DENGAN NM -----
+
         ideal_signal_func = nm.linear_interpolation(t, ideal_signal)
         ideal_voltage_sampled = ideal_signal_func(adc_samples_t)
         T_total = adc_samples_t[-1] - adc_samples_t[0] if len(adc_samples_t) > 1 else 1
