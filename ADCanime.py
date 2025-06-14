@@ -121,23 +121,39 @@ def main():
     img_data = image_to_base64("LOGO.png")
 
     st.markdown(
-        f"""
-        <style>
+    f"""
+    <style>
+        .fixed-logo {{
+            position: fixed;
+            top: 5rem;
+            right: 2.2rem;
+            z-index: 100;
+            border-radius: 1em;
+            padding: 0.1em;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            background: transparent;
+            transition: all 0.3s;
+        }}
+        .fixed-logo img {{
+            width: 140px;
+            transition: width 0.3s;
+        }}
+        @media (max-width: 600px) {{
             .fixed-logo {{
-                position: fixed;
-                top: 4.5rem;
-                right: 2rem;
-                z-index: 100;
-                border-radius: 1em;
-                padding: 0.5em;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+                top: 1.1rem;
+                right: 0.8rem;
+                padding: 0.05em;
             }}
-        </style>
-        <div class="fixed-logo">
-            <img src="data:image/png;base64,{img_data}" width="140"/>
-        </div>
-        """,
-        unsafe_allow_html=True
+            .fixed-logo img {{
+                width: 75px;
+            }}
+        }}
+    </style>
+    <div class="fixed-logo">
+        <img src="data:image/png;base64,{img_data}" />
+    </div>
+    """,
+    unsafe_allow_html=True
     )
 
     st.title("🌡️💧🎛️🎤")
