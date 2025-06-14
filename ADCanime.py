@@ -140,7 +140,7 @@ def main():
         }}
         @media (max-width: 600px) {{
             .fixed-logo {{
-                top: 1.1rem;
+                top: 5 rem;
                 right: 0.8rem;
                 padding: 0.05em;
             }}
