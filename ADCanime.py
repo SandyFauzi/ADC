@@ -12,7 +12,7 @@ import io
 from PIL import Image
 
 # ======================================================================
-# 2. HELPER FUNCTIONS (bukan numerik inti nm)
+# 2. HELPER FUNCTIONS (non-numerical core)
 # ======================================================================
 
 def sensor_to_voltage(value, min_val, max_val, v_ref):
@@ -27,7 +27,15 @@ def digital_to_sensor(digital_val, resolution, min_val, max_val):
     return ((digital_val / max_digital) * range_val) + min_val
 
 def to_binary_string(n, bits):
-    return format(int(n), f'0{bits}b')
+    try:
+        if np.isnan(n) or np.isinf(n):
+            n = 0
+        val = int(round(float(n)))
+        if val < 0:
+            val = 0
+    except Exception:
+        val = 0
+    return format(val, f'0{bits}b')
 
 def calc_rise_time(signal, t_axis):
     if len(signal) < 2:
@@ -59,7 +67,6 @@ def calc_rise_time(signal, t_axis):
         return 0.0
 
     return idx_90 - idx_10
-
 
 def max_slew_rate(signal, t_axis, scale_mv=True):
     diffs = np.diff(signal)
@@ -104,10 +111,36 @@ def make_signal_animation_gif(x_data, y_data, n_frames, label, title):
 # ======================================================================
 
 def main():
+    # ========================== HEADER ===============================
     st.set_page_config(page_title="Sensor to ADC Simulator", layout="wide")
-    st.title("🌡️💧🎛️🎤 Sensor Signal Data Simulator")
-    st.subheader("Analyzing the Effects of Analog Circuitry on ADC Accuracy")
 
+    # Header with logos and title
+    col_title, col_logo2 = st.columns([5, 0.5])
+    with col_title:
+        st.title("🌡️💧🎛️🎤 Sensor Signal Data Simulator")
+        st.subheader("Analyzing the Effects of Analog Circuitry on ADC Accuracy")
+        st.markdown(
+            """
+            Kelompok 17 Project Base Learning  
+            Komputasi Numerik - Fisika FMIPA Unpad
+            """
+        )
+    with col_logo2:
+        col_u, col_a = st.columns(2)
+        with col_u:
+            st.image("Unpad.png", width=50)
+            st.markdown(
+                "<div style='text-align:center; font-size:0.55rem;'>Universitas Padjadjaran</div>",
+                unsafe_allow_html=True
+            )
+        with col_a:
+            st.image("LogoAKN.png", width=33)
+            st.markdown(
+                "<div style='text-align:center; font-size:0.55rem;'>Komputasi Numerik</div>",
+                unsafe_allow_html=True
+            )
+
+    # ========================== END HEADER ===============================
     # ------------------------------------------------------------------
     # SIDEBAR
     # ------------------------------------------------------------------
@@ -163,7 +196,6 @@ def main():
         slew_rate = st.slider("Op-Amp Slew Rate (V/μs)", 0.1, 100.0, 10.0, step=0.01)
         noise_level = st.slider("Noise Level (mV)", 0.0, 10000.0, 10.0, step=0.01)
 
-
         st.subheader("3. ADC & Sampling")
         resolution = st.slider("ADC Resolution (bits)", 8, 16, 12)
         sampling_rate = st.slider("Sampling Rate (kSPS)", 1, 1000, 40)
@@ -188,6 +220,15 @@ def main():
             ], index=0, disabled=not anim_enable)
         n_frames = st.slider("Number of animation frames", 10, 100, 30, help="More = smoother", disabled=not anim_enable)
         run_simulation = st.button("Run Simulation")
+    
+    resistance = resistance_val * res_factor
+    capacitance = capacitance_val * cap_factor
+
+    # RC TIME CONSTANT VALIDATION
+    rc_constant = resistance * capacitance
+    if rc_constant < 1e-9 or rc_constant > 10:
+        st.error("RC time constant out of reasonable range. Adjust resistance or capacitance value.")
+        st.stop()
 
     # ------------------------------------------------------------------
     # 3.1. SIMULATION CALCULATION
@@ -204,7 +245,7 @@ def main():
         ideal_signal = np.full_like(t, ideal_voltage)
 
     noisy_signal = ideal_signal + (noise_level / 1000) * np.random.normal(0, 1, len(t))
-    rc_constant = resistance * 1000 * capacitance * 1e-6
+    rc_constant = resistance * capacitance              
 
     noisy_signal_func = nm.linear_interpolation(t, noisy_signal)
     def rc_ode_func(t_point, y_point):
@@ -234,7 +275,9 @@ def main():
 
     max_digital_val = 2 ** resolution - 1
     digital_output = np.round(adc_input_voltage / v_ref * max_digital_val)
+    digital_output = np.nan_to_num(digital_output, nan=0, posinf=max_digital_val, neginf=0)
     digital_output = np.clip(digital_output, 0, max_digital_val)
+    digital_output = digital_output.astype(int)
     quantized_voltage = digital_output / max_digital_val * v_ref
 
     if interpolation_method_choice == "Linear":
@@ -270,7 +313,7 @@ def main():
             else:
                 slew_rate_arr[i] = nm.forward_difference(f_opamp, tpt, h_slew)
 
-    slew_rate_arr = slew_rate_arr * 1e3  # V/s ke mV/μs
+    slew_rate_arr = slew_rate_arr * 1e3  # V/s to mV/μs
 
     st.success("Simulation Complete!")
 
@@ -340,21 +383,54 @@ def main():
             final_value = digital_to_sensor(last_digital_val, resolution, min_sensor, max_sensor)
             actual_value = sensor_value
             col1, col2, col3 = st.columns(3)
-            col1.metric(f"Actual Input Value", f"{actual_value:.2f} {unit}")
-            col2.metric(f"Measured Output Value", f"{final_value:.2f} {unit}", help="Reading is based on the last ADC sample.")
-            col3.metric("Measurement Error", f"{final_value - actual_value:+.2f} {unit}")
+            col1.metric(
+                f"Actual Input Value",
+                f"{actual_value:.2f} {unit}",
+                help="The true value entered from the sensor."
+            )
+            col2.metric(
+                f"Measured Output Value",
+                f"{final_value:.2f} {unit}",
+                help="Value measured after ADC conversion (last sample)."
+            )
+            col3.metric(
+                "Measurement Error",
+                f"{final_value - actual_value:+.2f} {unit}",
+                help="Difference between input and measured value."
+            )
         else:
             output_ac_signal = quantized_voltage - np.mean(quantized_voltage)
             final_value = (np.max(output_ac_signal) - np.min(output_ac_signal)) / 2 if len(output_ac_signal) > 0 else 0
             actual_value = amplitude
             col1, col2, col3 = st.columns(3)
-            col1.metric(f"Input Amplitude", f"{actual_value:.3f} {unit}")
-            col2.metric(f"Measured Amplitude", f"{final_value:.3f} {unit}")
-            col3.metric("Amplitude Error", f"{final_value - actual_value:+.3f} {unit}")
+            col1.metric(
+                f"Input Amplitude",
+                f"{actual_value:.3f} {unit}",
+                help="Amplitude set as input for the microphone simulation."
+            )
+            col2.metric(
+                f"Measured Amplitude",
+                f"{final_value:.3f} {unit}",
+                help="Amplitude measured from the processed output signal."
+            )
+            col3.metric(
+                "Amplitude Error",
+                f"{final_value - actual_value:+.3f} {unit}",
+                help="Difference between input and measured amplitude."
+            )
 
         st.markdown("---")
-        st.subheader("Voltage Signal Quality Analysis")
+        st.subheader("Voltage Signal Quality Evaluation")
 
+        # THRESHOLD VALUES
+        rms_ideal_max = 15      # mV
+        rise_time_min = 0       # ms
+        rise_time_max = 30      # ms
+        snr_ideal_min = 45      # dB
+        slew_ideal_min = 0      # mV/μs
+        slew_ideal_max = 2      # mV/μs
+
+        # Calculate metrics
         ideal_signal_func = nm.linear_interpolation(t, ideal_signal)
         ideal_voltage_sampled = ideal_signal_func(adc_samples_t)
         T_total = adc_samples_t[-1] - adc_samples_t[0] if len(adc_samples_t) > 1 else 1
@@ -369,16 +445,92 @@ def main():
             else:
                 integral_error = nm.simpson_38_rule(sq_err_func, adc_samples_t[0], adc_samples_t[-1], n_integral)
             rms_error_voltage = np.sqrt(integral_error / T_total)
-        st.metric("RMS Error (Voltage)", f"{rms_error_voltage*1000:.2f} mV")
+        rms_mV = rms_error_voltage*1000
+
         rise_time_analog = calc_rise_time(opamp_output, t_filtered)
-        st.metric("Rise Time (Analog, 10%-90%)", f"{rise_time_analog*1000:.3f} ms")
+        rise_ms = rise_time_analog*1000
+
         signal_power = np.mean((ideal_voltage_sampled)**2)
         noise_power = np.mean((quantized_voltage - ideal_voltage_sampled)**2)
         snr_db = 10 * np.log10(signal_power / noise_power) if noise_power > 0 else float('inf')
-        st.metric("SNR (dB)", f"{snr_db:.2f} dB")
-        max_slew = max_slew_rate(opamp_output, t_filtered, scale_mv=True)
-        st.metric("Measured Signal Slew Rate", f"{max_slew:.3f} mV/μs")
 
+        max_slew = max_slew_rate(opamp_output, t_filtered, scale_mv=True)
+
+        # Display each metric with help tooltip
+        colA, colB, colC, colD = st.columns(4)
+        with colA:
+            st.metric(
+                label="RMS Error (Voltage)",
+                value=f"{rms_mV:.2f} mV",
+                help="Root Mean Square Error. Measures average voltage error between ideal and quantized signal (lower is better)."
+            )
+            st.markdown(
+                f"{'✅' if rms_mV <= rms_ideal_max else '❌'} <small>(Ideal ≤ {rms_ideal_max} mV)</small>", unsafe_allow_html=True
+            )
+        with colB:
+            st.metric(
+                label="Rise Time (10%-90%)",
+                value=f"{rise_ms:.3f} ms",
+                help="Time needed for the signal to rise from 10% to 90% of its final value. Lower is better (faster response)."
+            )
+            st.markdown(
+                f"{'✅' if rise_time_min <= rise_ms <= rise_time_max else '❌'} <small>(Ideal {rise_time_min}–{rise_time_max} ms)</small>", unsafe_allow_html=True
+            )
+        with colC:
+            st.metric(
+                label="SNR (Signal-to-Noise Ratio)",
+                value=f"{snr_db:.2f} dB",
+                help="Signal-to-Noise Ratio. Higher SNR means cleaner, less noisy output (higher is better)."
+            )
+            st.markdown(
+                f"{'✅' if snr_db >= snr_ideal_min else '❌'} <small>(Ideal ≥ {snr_ideal_min} dB)</small>", unsafe_allow_html=True
+            )
+        with colD:
+            st.metric(
+                label="Slew Rate",
+                value=f"{max_slew:.3f} mV/μs",
+                help="Maximum rate of voltage change in the signal (how fast the circuit responds to change)."
+            )
+            st.markdown(
+                f"{'✅' if slew_ideal_min <= max_slew <= slew_ideal_max else '❌'} <small>(Ideal {slew_ideal_min}–{slew_ideal_max} mV/μs)</small>", unsafe_allow_html=True
+            )
+
+        # ====== BIG, COLORFUL SUMMARY DISPLAY ======
+        st.markdown("## 🧾 <b>Quality Evaluation Summary</b>", unsafe_allow_html=True)
+        def big_metric(label, value, unit, ok, help_txt):
+            color = "#00FF77" if ok else "#FF4444"
+            return f"""
+            <div style="font-size:2.5rem;font-weight:800;margin-bottom:10px;color:{color};">
+                {label}: {value} <span style="font-size:1.4rem;">{unit}</span>
+                <span title="{help_txt}" style="cursor:help;font-size:1.5rem;margin-left:10px;">❓</span>
+            </div>
+            """
+        rms_ok = rms_mV <= rms_ideal_max
+        rise_ok = rise_time_min <= rise_ms <= rise_time_max
+        snr_ok = snr_db >= snr_ideal_min
+        slew_ok = slew_ideal_min <= max_slew <= slew_ideal_max
+        colE, colF = st.columns(2)
+        with colE:
+            st.markdown(big_metric(
+                "RMS Error", f"{rms_mV:.2f}", "mV", rms_ok,
+                "Root Mean Square Error. Measures average voltage error between ideal and quantized signal (lower is better)."
+            ), unsafe_allow_html=True)
+            st.markdown(big_metric(
+                "SNR", f"{snr_db:.2f}", "dB", snr_ok,
+                "Signal-to-Noise Ratio. Higher SNR means cleaner, less noisy output (higher is better)."
+            ), unsafe_allow_html=True)
+        with colF:
+            st.markdown(big_metric(
+                "Rise Time", f"{rise_ms:.3f}", "ms", rise_ok,
+                "Time needed for the signal to rise from 10% to 90% of its final value. Lower is better (faster response)."
+            ), unsafe_allow_html=True)
+            slew_val = f"{max_slew:.3f}" if not np.isnan(max_slew) else "NaN"
+            st.markdown(big_metric(
+                "Slew Rate", slew_val, "mV/μs", slew_ok,
+                "Maximum rate of voltage change in the signal (how fast the circuit responds to change)."
+            ), unsafe_allow_html=True)
+
+        # =====================
         st.markdown("---")
         st.subheader("ADC Linearity Analysis (Regression)")
         beta, poly_func = nm.polynomial_regression(adc_input_voltage, digital_output, degree=1)
@@ -394,6 +546,7 @@ def main():
         ax_reg.legend(loc='upper left')
         ax_reg.grid(True)
         st.pyplot(fig_reg)
+
 
     with tab3:
         st.subheader("Export Simulation Data")
