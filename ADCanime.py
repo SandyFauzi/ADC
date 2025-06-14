@@ -111,11 +111,14 @@ def make_signal_animation_gif(x_data, y_data, n_frames, label, title):
 # ======================================================================
 
 def main():
-    # ========================== HEADER ===============================
     st.set_page_config(page_title="Sensor to ADC Simulator", layout="wide")
+    # ========================== HEADER ===============================
+    # Buat baris logo di pojok kanan atas
+    col_title, col_logo = st.columns([6, 1])
 
-    # Header with logos and title
-    col_title, col_logo2 = st.columns([5, 0.5])
+    with col_logo:
+        st.image("LOGO.png", width=110)
+
     with col_title:
         st.title("🌡️💧🎛️🎤 Sensor Signal Data Simulator")
         st.subheader("Analyzing the Effects of Analog Circuitry on ADC Accuracy")
@@ -125,21 +128,6 @@ def main():
             Komputasi Numerik - Fisika FMIPA Unpad
             """
         )
-    with col_logo2:
-        col_u, col_a = st.columns(2)
-        with col_u:
-            st.image("Unpad.png", width=50)
-            st.markdown(
-                "<div style='text-align:center; font-size:0.55rem;'>Universitas Padjadjaran</div>",
-                unsafe_allow_html=True
-            )
-        with col_a:
-            st.image("LogoAKN.png", width=33)
-            st.markdown(
-                "<div style='text-align:center; font-size:0.55rem;'>Komputasi Numerik</div>",
-                unsafe_allow_html=True
-            )
-
     # ========================== END HEADER ===============================
     # ------------------------------------------------------------------
     # SIDEBAR
