@@ -499,12 +499,8 @@ def main():
         st.markdown("## 🧾 <b>Quality Evaluation Summary</b>", unsafe_allow_html=True)
         def big_metric(label, value, unit, ok, help_txt):
             color = "#00FF77" if ok else "#FF4444"
-            return f"""
-            <div style="font-size:2.5rem;font-weight:800;margin-bottom:10px;color:{color};">
-                {label}: {value} <span style="font-size:1.4rem;">{unit}</span>
-                <span title="{help_txt}" style="cursor:help;font-size:1.5rem;margin-left:10px;">❓</span>
-            </div>
-            """
+            return f'<div style="font-size:2.5rem;font-weight:800;margin-bottom:10px;color:{color};">{label}: {value} <span style="font-size:1.4rem;">{unit}</span><span title="{help_txt}" style="cursor:help;font-size:1.5rem;margin-left:10px;">❓</span></div>'
+
         rms_ok = rms_mV <= rms_ideal_max
         rise_ok = rise_time_min <= rise_ms <= rise_time_max
         snr_ok = snr_db >= snr_ideal_min
