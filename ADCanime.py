@@ -38,19 +38,28 @@ def calc_rise_time(signal, t_axis):
         return 0.0
     v_10 = v_min + 0.1 * (v_max - v_min)
     v_90 = v_min + 0.9 * (v_max - v_min)
-    idx_10, idx_90 = None, None
+    idx_10 = None
+    idx_90 = None
+
     for i in range(1, len(signal)):
         if signal[i-1] < v_10 <= signal[i]:
             t1 = t_axis[i-1] + (t_axis[i] - t_axis[i-1]) * (v_10 - signal[i-1]) / (signal[i] - signal[i-1])
             idx_10 = t1
-        if signal[i-1] < v_90 <= signal[i]:
-            t2 = t_axis[i-1] + (t_axis[i] - t_axis[i-1]) * (v_90 - signal[i-1]) / (signal[i] - signal[i-1])
-            idx_90 = t2
-        if idx_10 is not None and idx_90 is not None:
             break
-    if idx_10 is None or idx_90 is None:
+    if idx_10 is None:
         return 0.0
+
+    for i in range(1, len(signal)):
+        if t_axis[i-1] >= idx_10:
+            if signal[i-1] < v_90 <= signal[i]:
+                t2 = t_axis[i-1] + (t_axis[i] - t_axis[i-1]) * (v_90 - signal[i-1]) / (signal[i] - signal[i-1])
+                idx_90 = t2
+                break
+    if idx_90 is None:
+        return 0.0
+
     return idx_90 - idx_10
+
 
 def max_slew_rate(signal, t_axis, scale_mv=True):
     diffs = np.diff(signal)
