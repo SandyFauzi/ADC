@@ -117,7 +117,7 @@ def main():
     col_title, col_logo = st.columns([6, 1])
 
     with col_logo:
-        st.image("LOGO.png", width=500)
+        st.image("LOGO.png", width=200)
 
     with col_title:
         st.title("🌡️💧🎛️🎤 Sensor Signal Data Simulator")
