@@ -128,7 +128,6 @@ def main():
                 top: 4.5rem;
                 right: 2rem;
                 z-index: 100;
-                background: white;
                 border-radius: 1em;
                 padding: 0.5em;
                 box-shadow: 0 4px 12px rgba(0,0,0,0.08);
