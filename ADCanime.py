@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import numerical_methods as nm
-
+import base64
 import io
 from PIL import Image
 
@@ -111,23 +111,44 @@ def make_signal_animation_gif(x_data, y_data, n_frames, label, title):
 # ======================================================================
 
 def main():
-    st.set_page_config(page_title="Sensor to ADC Simulator", layout="wide")
     # ========================== HEADER ===============================
-    # Buat baris logo di pojok kanan atas
-    col_title, col_logo = st.columns([6, 1])
+    st.set_page_config(page_title="Sensor to ADC Simulator", layout="wide")
 
-    with col_logo:
-        st.image("LOGO.png", width=200)
+    def image_to_base64(file):
+        with open(file, "rb") as image_file:
+            return base64.b64encode(image_file.read()).decode()
 
-    with col_title:
-        st.title("🌡️💧🎛️🎤 Sensor Signal Data Simulator")
-        st.subheader("Analyzing the Effects of Analog Circuitry on ADC Accuracy")
-        st.markdown(
-            """
-            Kelompok 17 Project Base Learning  
-            Komputasi Numerik - Fisika FMIPA Unpad
-            """
-        )
+    img_data = image_to_base64("LOGO.png")
+
+    st.markdown(
+        f"""
+        <style>
+            .fixed-logo {{
+                position: fixed;
+                top: 4.5rem;
+                right: 2rem;
+                z-index: 100;
+                background: white;
+                border-radius: 1em;
+                padding: 0.5em;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            }}
+        </style>
+        <div class="fixed-logo">
+            <img src="data:image/png;base64,{img_data}" width="140"/>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    st.title("🌡️💧🎛️🎤 Sensor Signal Data Simulator")
+    st.subheader("Analyzing the Effects of Analog Circuitry on ADC Accuracy")
+    st.markdown(
+        """
+        Kelompok 17 Project Base Learning  
+        Komputasi Numerik - Fisika FMIPA Unpad
+        """
+    )
     # ========================== END HEADER ===============================
     # ------------------------------------------------------------------
     # SIDEBAR
