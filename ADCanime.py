@@ -137,7 +137,7 @@ def main():
         capacitance = st.slider("Filter Capacitance (μF)", 0.01, 100.0, 0.1, step=0.01)
         gain = st.slider("Op-Amp Gain", 0.1, 10.0, 1.0, step=0.01)
         slew_rate = st.slider("Op-Amp Slew Rate (V/μs)", 0.1, 100.0, 10.0, step=0.01)
-        noise_level = st.slider("Noise Level (mV)", 0.0, 100.0, 10.0, step=0.01)
+        noise_level = st.slider("Noise Level (mV)", 0.0, 10000.0, 10.0, step=0.01)
 
         st.subheader("3. ADC & Sampling")
         resolution = st.slider("ADC Resolution (bits)", 8, 16, 12)
